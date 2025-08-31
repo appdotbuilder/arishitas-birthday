@@ -1,15 +1,24 @@
+import { db } from '../db';
+import { videosTable } from '../db/schema';
 import { type AddVideoInput, type Video } from '../schema';
 
-export async function addVideo(input: AddVideoInput): Promise<Video> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is adding a new video entry and persisting it in the database.
-    // This should validate video URLs (YouTube, Vimeo, etc.) and extract thumbnails if needed.
-    return Promise.resolve({
-        id: 0, // Placeholder ID
+export const addVideo = async (input: AddVideoInput): Promise<Video> => {
+  try {
+    // Insert video record
+    const result = await db.insert(videosTable)
+      .values({
         title: input.title,
         video_url: input.video_url,
         thumbnail_url: input.thumbnail_url || null,
-        uploaded_by: input.uploaded_by,
-        uploaded_at: new Date() // Placeholder date
-    } as Video);
-}
+        uploaded_by: input.uploaded_by
+      })
+      .returning()
+      .execute();
+
+    const video = result[0];
+    return video;
+  } catch (error) {
+    console.error('Video creation failed:', error);
+    throw error;
+  }
+};

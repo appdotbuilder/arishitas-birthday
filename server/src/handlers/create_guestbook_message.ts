@@ -1,13 +1,26 @@
+import { db } from '../db';
+import { guestbookMessagesTable } from '../db/schema';
 import { type CreateGuestbookMessageInput, type GuestbookMessage } from '../schema';
 
-export async function createGuestbookMessage(input: CreateGuestbookMessageInput): Promise<GuestbookMessage> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating a new guestbook message and persisting it in the database.
-    // Should validate message content and author name, and handle potential spam protection.
-    return Promise.resolve({
-        id: 0, // Placeholder ID
+export const createGuestbookMessage = async (input: CreateGuestbookMessageInput): Promise<GuestbookMessage> => {
+  try {
+    // Insert guestbook message record
+    const result = await db.insert(guestbookMessagesTable)
+      .values({
         author_name: input.author_name,
-        message: input.message,
-        created_at: new Date() // Placeholder date
-    } as GuestbookMessage);
-}
+        message: input.message
+      })
+      .returning()
+      .execute();
+
+    // Return the created message
+    const message = result[0];
+    return {
+      ...message,
+      created_at: message.created_at // Already a Date object from timestamp column
+    };
+  } catch (error) {
+    console.error('Guestbook message creation failed:', error);
+    throw error;
+  }
+};
